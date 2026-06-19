@@ -5,7 +5,7 @@ description: >-
   skills as the official digital SAT, via a generate → verify → refine → Word-export
   pipeline. Use this whenever the user wants to create, write, generate, produce, or
   build SAT or digital-SAT / Bluebook-style practice problems, question sets, or item
-  banks — for Math or Reading & Writing, by subskill and difficulty (Easy/Medium/Hard) —
+  banks — for Math or Reading & Writing, by skill and difficulty (Easy/Medium/Hard) —
   or wants to verify generated SAT items against rules, refine failing items, or turn
   uploaded College Board question PDFs into fresh, equivalent practice. Trigger even on
   terse asks like "make me 10 hard linear-equation SAT questions" or "write SAT Words in
@@ -31,7 +31,7 @@ Claude Code it can run serially, without that parallelism or independence.
 ## The pipeline
 
 ```
-3 PDFs ─► GENERATE (1/difficulty) ─► VERIFY (1/difficulty) ─► REFINE ─► (re-verify) ─► WORD DOC
+3 PDFs ─► GENERATE (1/difficulty) ─► VERIFY (1/difficulty) ─► REFINE ─► (re-verify) ─► 3 WORD DOCS (1/difficulty)
                                           └──────── loop until all pass ────────┘
 ```
 
@@ -39,47 +39,49 @@ Operational detail — subagent orchestration, injection, loop conditions, on-di
 staging — lives in **`references/workflow.md`**; read it before running a job. At a
 glance:
 
-1. **Intake.** The user uploads 3 PDFs (one subskill at easy/medium/hard, 10 questions
+1. **Intake.** The user uploads 3 PDFs (one skill at easy/medium/hard, 10 questions
    each) and says which is which. Echo the mapping back to confirm before generating.
 2. **Generate.** One subagent per difficulty. Each reads its own reference PDF plus the
-   subskill's guideline file — the shared sections, plus only its own difficulty's
+   skill's guideline file — the shared sections, plus only its own difficulty's
    block — and writes 10 full questions in the standard format.
 3. **Verify.** One independent subagent per difficulty checks all 10 against the
-   subskill's verification rules; Math correctness runs through `check_math.py`. Output
+   skill's verification rules; Math correctness runs through `check_math.py`. Output
    is pass/fail per question.
-4. **Refine.** Any question that fails any check is corrected (lightest coherent touch)
-   and sent back to verify. Loop until all pass; cap at 3 cycles and surface stragglers.
-5. **Export.** Build one Word doc: three sets of 10 full questions (easy / medium /
-   hard), one after another.
+4. **Refine.** Any question that fails any check is corrected (lightest coherent touch),
+   written back into its set file in place, and sent back to verify. Loop until all pass;
+   cap at 3 cycles and surface stragglers.
+5. **Export.** Build three Word docs — one per difficulty (easy / medium / hard) — each
+   holding that difficulty's 10 full questions, by running the export script once per
+   difficulty.
 
-## Two layers: reusable prompts + per-subskill guidelines
+## Two layers: reusable prompts + per-skill guidelines
 
 Instructions and content are kept separate. `prompts/*.md` are **generic skeletons,
 written once**, with `{INJECT:...}` slots and no SAT content of their own. The
-**per-subskill guideline file** supplies the content. At runtime the orchestrator
+**per-skill guideline file** supplies the content. At runtime the orchestrator
 injects the relevant guidelines into a skeleton and hands it to a subagent.
 
-There is **one guideline file per subskill**, and it feeds *both* generation and
+There is **one guideline file per skill**, and it feeds *both* generation and
 verification — the generator writes toward it, the verifier checks against it — so the
-question rules and the verification rules can't drift apart, and each subskill is
+question rules and the verification rules can't drift apart, and each skill is
 maintained in exactly one place. Difficulty lives in that same file as three labeled
 blocks; each per-difficulty subagent is injected only its own block, so the "hard"
 generator never sees the "easy" definition that would drag it toward the middle.
 
 ```
-references/subskill-rules/<section>/<skill>/<subskill>.md
+references/skill-rules/<subject>/<topic>/<skill>.md
 ```
 
 ## Current state: guideline files are placeholders*
 
 The guideline files are **empty stubs** right now (structure shown in the templates
-`references/subskill-rules/_TEMPLATE-*.md`). Generation quality depends entirely on
-them, so **before generating for a subskill, its file must be filled in** — if it still
-says `status: PLACEHOLDER`, stop and tell the user that subskill isn't ready.
+`references/skill-rules/_TEMPLATE-*.md`). Generation quality depends entirely on
+them, so **before generating for a skill, its file must be filled in** — if it still
+says `status: PLACEHOLDER`, stop and tell the user that skill isn't ready.
 
 ## Prompt skeletons
 
-- `prompts/generate.md` — one generation subagent (subskill × difficulty); gets the
+- `prompts/generate.md` — one generation subagent (skill × difficulty); gets the
   guideline (core + one difficulty block) and the reference PDF injected.
 - `prompts/verify.md` — one verification subagent; gets the guideline and the questions.
 - `prompts/refine.md` — fix one failing item against its failed rule IDs.
@@ -91,16 +93,17 @@ says `status: PLACEHOLDER`, stop and tell the user that subskill isn't ready.
   check fails on. **Read before generating.**
 - `references/output-format.md` — the standard question-set markdown, the Math solution
   spec, the verification report, and the final Word layout. The scripts depend on these.
-- `references/taxonomy.json` — canonical digital-SAT taxonomy (drives the subskill folder layout).
-- `references/subskill-rules/...` — the per-subskill guideline files (source of truth).
+- `references/taxonomy.json` — canonical digital-SAT taxonomy (drives the skill folder layout).
+- `references/skill-rules/...` — the per-skill guideline files (source of truth).
 
 ## Scripts
 
 - `scripts/check_math.py` — confirms each Math item has exactly one correct option
   matching the key. Run during verification.
   `python scripts/check_math.py <question-set.md>`
-- `scripts/build_docx.py` — builds the final Word doc (three sets of 10).
-  `python scripts/build_docx.py --out final.docx --title "..." <sets...>`
+- `scripts/build_docx.py` — builds one Word doc from a single difficulty's 10 questions;
+  run once per difficulty for three docs.
+  `python scripts/build_docx.py --out <skill>-<difficulty>.docx --title "..." final/<skill>__<difficulty>.md`
 
 Dependencies: `sympy`, `python-docx`
 (`pip install sympy python-docx --break-system-packages`). To read reference PDFs, use

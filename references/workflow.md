@@ -4,25 +4,25 @@ Operational detail behind the pipeline summarized in SKILL.md. Read this before 
 a job.
 
 ```
-3 PDFs ─► GENERATE (1/difficulty) ─► VERIFY (1/difficulty) ─► REFINE ─► (re-verify) ─► WORD DOC
+3 PDFs ─► GENERATE (1/difficulty) ─► VERIFY (1/difficulty) ─► REFINE ─► (re-verify) ─► 3 WORD DOCS (1/difficulty)
                                           └──────── loop until all pass ────────┘
 ```
 
-The unit of work is one **(subskill × difficulty)** → **10 questions**. A normal run is
-one subskill across all three difficulties — the three PDFs the user uploads.
+The unit of work is one **(skill × difficulty)** → **10 questions**. A normal run is
+one skill across all three difficulties — the three PDFs the user uploads.
 
 ## How prompts and guidelines assemble
 
 Two layers (see SKILL.md): generic **prompt skeletons** in `prompts/` with `{INJECT:...}`
-slots, and one **guideline file per subskill** under `references/subskill-rules/` that
+slots, and one **guideline file per skill** under `references/skill-rules/` that
 holds the content. At each stage the orchestrator pulls the relevant pieces out of the
 guideline file, fills the skeleton's slots, and hands the assembled prompt to a subagent.
 
 Three pieces get pulled from a guideline file:
 
-- **Core** — the subskill's identity header (section / skill / subskill, used to write the
+- **Core** — the skill's identity header (subject / topic / skill, used to write the
   output's `set-meta` line) plus the difficulty-independent design content: the invariant
-  (what the subskill tests), the question variables, the distractor design, and for Math
+  (what the skill tests), the question variables, the distractor design, and for Math
   the machine-checkable solution-spec requirement.
 - **Difficulty** — one self-labeled block for the level being run (its name and
   definition together, e.g. a `### Hard` block). In the guideline file the difficulty
@@ -32,7 +32,7 @@ Three pieces get pulled from a guideline file:
 
 ## Orchestrator role — how slots get filled
 
-The skill runs with one **orchestrator** (the main agent) plus stage **subagents**
+The skill runs with one **orchestrator** (the main agent) plus per-stage **subagents**
 (workers). Subagents never talk to each other; every piece of data flows through the
 orchestrator. For each stage it: extracts the pieces it needs from the guideline file and
 from the previous stage's staged output, fills the next prompt's `{INJECT:...}` slots,
@@ -50,47 +50,47 @@ Where each slot comes from:
 
 | Stage | Slot | Source |
 |---|---|---|
-| Generate | `SUBSKILL_CORE` | guideline file — identity header + core sections, sliced by heading |
+| Generate | `SKILL_CORE` | guideline file — identity header + core sections, sliced by heading |
 | | `DIFFICULTY` | guideline file — the one `### <level>` block |
 | | `REFERENCE_PDF` | the PDF the user mapped to this difficulty at intake |
 | | `COUNT` | the run setting (default 10) |
-| Verify | `SUBSKILL_CORE`, `DIFFICULTY` | the same guideline slices already extracted for generation |
+| Verify | `SKILL_CORE`, `DIFFICULTY` | the same guideline slices already extracted for generation |
 | | `VERIFICATION_RULES` | guideline file — the verification-rules section, sliced by heading |
-| | `QUESTIONS` | path to the staged `generated/<subskill>__<difficulty>.md` |
+| | `QUESTIONS` | path to the staged `generated/<skill>__<difficulty>.md` |
 | Refine | `ITEM` | the `## Item N` block pulled from the staged set, for each N the report marked FAIL |
 | | `FAILED_RULES` | the verification report — that item's failed rule IDs + the reviewer's reason rows |
-| | `SUBSKILL_CORE`, `DIFFICULTY`, `VERIFICATION_RULES` | the same guideline slices, reused |
+| | `SKILL_CORE`, `DIFFICULTY`, `VERIFICATION_RULES` | the same guideline slices, reused |
 
 ## 0. Intake
 
-The user uploads 3 PDFs (one subskill, at easy/medium/hard, 10 questions each) and says
+The user uploads 3 PDFs (one skill, at easy/medium/hard, 10 questions each) and says
 in their message which PDF is which. There is no categorization step — take the mapping
 from what the user said.
 
 Before anything else, **echo the mapping back and wait for confirmation** — e.g.
 "Generating 10 each for *linear-equations-in-one-variable* at easy, medium, and hard from
 these three files — correct?" This catches a mislabeled upload before it becomes a batch
-of wrong-subskill questions.
+of wrong-skill questions.
 
-Then load the subskill's guideline file. **If it still says `status: PLACEHOLDER`, stop
-and tell the user that subskill isn't ready** — there are no rules to generate or verify
+Then load the skill's guideline file. **If it still says `status: PLACEHOLDER`, stop
+and tell the user that skill isn't ready** — there are no rules to generate or verify
 against.
 
 ## 1. Generate — one subagent per difficulty
 
 Spin up three subagents to run in parallel, one per difficulty. Each receives the full assembled
-`prompts/generate.md`, which combines **standing** instructions baked into the skeleton
+`prompts/generate.md`, which combines **standing** instructions baked into the prompt skeleton
 with **injected** run-specific pieces. The complete payload to each subagent is:
 
-Standing (in the skeleton, identical every run):
-- the task framing — write `{COUNT}` original SAT items for one subskill at one difficulty;
+Standing (in the prompt skeleton, identical every run):
+- the task framing — write `{COUNT}` original SAT items for one skill at one difficulty;
 - the distinctness principle (same skill, original content), pointing to
   `references/distinctness.md`;
 - the output requirement, pointing to the question-set format in
   `references/output-format.md`.
 
 Injected (per subagent, from the orchestrator):
-- `{INJECT:SUBSKILL_CORE}` ← the subskill's core design content (invariant, question
+- `{INJECT:SKILL_CORE}` ← the skill's core design content (invariant, question
   variables, distractor design, and for Math the solution-spec requirement);
 - `{INJECT:DIFFICULTY}` ← the one self-labeled difficulty block for this subagent (label
   and definition together); the other two levels are never passed;
@@ -102,13 +102,13 @@ Each subagent writes 10 full questions in the standard question-set markdown: al
 options, the correct answer, and an explanation of the correct answer; Math items also
 carry the `spec` block.
 
-Stage output to `generated/<subskill>__<difficulty>.md`.
+Stage output to `generated/<skill>__<difficulty>.md`.
 
 ## 2. Verify — one independent subagent per difficulty
 
 For each difficulty, assemble `prompts/verify.md`:
 
-- `{INJECT:SUBSKILL_CORE}` + `{INJECT:DIFFICULTY}` — so the checker knows the design and
+- `{INJECT:SKILL_CORE}` + `{INJECT:DIFFICULTY}` — so the checker knows the design and
   the difficulty target it's checking against;
 - `{INJECT:VERIFICATION_RULES}` ← the yes/no checks from the guideline;
 - `{INJECT:QUESTIONS}` ← the generated set.
@@ -120,7 +120,7 @@ than eyeballing arithmetic. It outputs a pass/fail per question — one line per
 reason — in the verification-report format (`output-format.md`), ending each item with a
 `Failed rules:` line.
 
-Stage reports to `verified/<subskill>__<difficulty>.md`.
+Stage reports to `verified/<skill>__<difficulty>.md`.
 
 A question is **done** when it passes every rule. Any failed rule routes it to refine.
 
@@ -130,30 +130,55 @@ For each failing question, assemble `prompts/refine.md`:
 
 - `{INJECT:ITEM}` ← the single failing question;
 - `{INJECT:FAILED_RULES}` ← the failed rule IDs plus the verifier's reasons;
-- `{INJECT:SUBSKILL_CORE}` + `{INJECT:DIFFICULTY}` + `{INJECT:VERIFICATION_RULES}`.
+- `{INJECT:SKILL_CORE}` + `{INJECT:DIFFICULTY}` + `{INJECT:VERIFICATION_RULES}`.
 
 The refiner makes the lightest change that turns the failed rules green, adjusting
 dependent parts only as needed (e.g. if the key changes, fix the explanation and, for
 Math, the `spec` block too). It does not touch what already passes. If an item is too
 broken to patch, it rebuilds from the guideline. Output is the single corrected item.
 
+**The orchestrator then writes that corrected item back into the set file**
+`generated/<skill>__<difficulty>.md`, replacing the old `## Item N` block in place (matched
+by item number) with the returned one. This is the step that actually applies the fix: the
+set file is the single source the next verify pass and `check_math.py` read, and the one the
+export ultimately ships — a corrected item held only in the orchestrator's context, and not
+spliced back, would be silently dropped. Refine never appends or renumbers; it overwrites
+exactly the `## Item N` it was given, so the set always has 10 items in order.
+
 ## 4. Loop
 
-Send refined items back through step 2. Repeat refine ↔ verify until every question
-passes, capped at **3 cycles**. Anything still failing after the cap is surfaced to the
-user, not shipped — don't lower the bar to force a pass.
+Re-verify (step 2) the **updated** set file — not the original generation and not the
+corrected items in isolation. Because every refinement was spliced back in above, the file
+holds the current best version of all 10, so the re-run checks exactly what will ship.
+Repeat refine ↔ verify until every question passes, capped at **3 cycles**. Anything still
+failing after the cap is surfaced to the user, not shipped — don't lower the bar to force a
+pass.
 
 ## 5. Export
 
-When all three sets pass, stage them to `final/<subskill>__<difficulty>.md`, then run
-`scripts/build_docx.py` over those files. It strips the Math `spec` blocks and emits one
-Word doc: three sets of 10 full questions (easy / medium / hard), one after another, each
-a uniform block (question, options, answer, explanation). Exact layout is in
-`output-format.md`.
+When all three sets pass, stage each one — the fully-refined `generated/<skill>__<difficulty>.md`,
+with every corrected item already spliced in (step 3) — to `final/<skill>__<difficulty>.md`.
+The final file is just the passing set as it now stands on disk, so the doc is built from the
+corrected items, never the original failing ones. Then run `scripts/build_docx.py` **once per
+difficulty** — three separate invocations, each over that one difficulty's final file —
+producing **three Word docs**, one per difficulty
+(easy / medium / hard), each holding that difficulty's 10 full questions. Give each call
+its own `--out` path and a `--title` naming the skill and difficulty:
+
+```
+python scripts/build_docx.py --out final/<skill>-easy.docx \
+    --title "<Skill label> — Easy"   final/<skill>__easy.md
+# …and again for medium and hard.
+```
+
+The script strips the Math `spec` blocks and lays each item out as a uniform block
+(question, options, answer, explanation). Exact layout is in `output-format.md`. Do **not**
+pass all three final files in one call — that merges them into a single combined doc, which
+is no longer what we want; pass exactly one difficulty's file per call.
 
 ## Orchestration notes
 
-- **Context hygiene:** each subagent gets only its slice — one subskill, one difficulty,
+- **Context hygiene:** each subagent gets only its slice — one skill, one difficulty,
   the relevant guideline pieces — never the whole job.
 - **Continuity:** keep `generated/`, `verified/`, `final/` on disk so any stage can re-run
   without redoing the rest.

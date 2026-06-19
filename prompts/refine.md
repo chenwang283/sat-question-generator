@@ -20,9 +20,9 @@ change the difficulty.
 These are the only problems you must solve. The reviewer's reason for each one tells you
 what specifically is wrong.
 
-## Subskill design (fix in line with this)
+## Skill design (fix in line with this)
 
-{INJECT:SUBSKILL_CORE}
+{INJECT:SKILL_CORE}
 
 ## Difficulty (keep the item at this level)
 
@@ -35,18 +35,24 @@ what specifically is wrong.
 ## How to fix
 
 - Change only what's needed to clear the failed rules — but make the change *coherent*. If
-  the correct answer itself changes, update the explanation to match, and for Math update
-  the ` ```spec ` block so its keyed option is the new unique solution.
+  the correct answer itself changes, update the explanation to match, refresh the three
+  `**Why not X:**` lines so they cover exactly the new set of wrong options (add a line for
+  the option that is no longer correct, drop the one for the new correct option), and for
+  Math update the ` ```spec ` block so its keyed option is the new unique solution.
+- If a failed rule is about a wrong-answer explanation, fix only the flagged `**Why not X:**`
+  line(s) so each accurately and precisely says why that option is wrong; leave the keyed
+  `**Explanation:**` and any already-correct `Why not` lines untouched.
 - Keep every currently-passing rule passing; re-check your edit against the full rule list
   above before finishing.
 - Any new or rewritten content must stay original per `references/distinctness.md` — don't
   fix a problem by drifting toward the reference items.
 - If the item is too compromised to patch (e.g. the passage itself is the failure), rebuild
-  it from the subskill design rather than forcing a patch.
+  it from the skill design rather than forcing a patch.
 
 ## Output
 
 Output the single corrected item only, in the same standard item format as the input — the
 same `## Item N` number, the `**Stem:**` / `**A.**`–`**D.**` / `**Correct:**` /
-`**Explanation:**` labels, plus `**Passage:**` for Reading & Writing or the ` ```spec `
-block for Math. No commentary. It goes straight back through verification.
+`**Explanation:**` labels, the three `**Why not X:**` lines, plus `**Passage:**` for Reading
+& Writing or the ` ```spec ` block for Math. No commentary. It goes straight back through
+verification.

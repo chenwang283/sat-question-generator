@@ -13,12 +13,12 @@ parse them, and Study Spaces extracts the Word doc by structure. Don't vary them
 
 ## 1. Question set (markdown)
 
-One file per `(subskill × difficulty)`. A header line, a `set-meta` comment, then items
+One file per `(skill × difficulty)`. A header line, a `set-meta` comment, then items
 separated by a line containing only `---`. Math example:
 
 ````markdown
-# <Section> · <Skill> · <Subskill> — <Difficulty>
-<!-- set-meta: section=math; skill=algebra; subskill=linear-equations-in-one-variable; difficulty=easy; count=10 -->
+# <Subject> · <Topic> · <Skill> — <Difficulty>
+<!-- set-meta: subject=math; topic=algebra; skill=linear-equations-in-one-variable; difficulty=easy; count=10 -->
 
 ## Item 1
 **Stem:** If 3x + 5 = 20, what is the value of x?
@@ -28,6 +28,9 @@ separated by a line containing only `---`. Math example:
 **D.** 25/3
 **Correct:** B
 **Explanation:** Subtracting 5 from both sides gives 3x = 15, so x = 5.
+**Why not A:** Reaches 3x = 15 but divides by the constant 5 instead of the coefficient 3 (15 ÷ 5 = 3).
+**Why not C:** Reaches 3x = 15 but subtracts the coefficient 3 twice instead of dividing (15 − 3 − 3 = 9).
+**Why not D:** Adds 5 to both sides instead of subtracting, then divides by 3: (20 + 5)/3 = 25/3.
 ```spec
 { "given": ["3*x+5=20"], "ask": "x", "options": {"A":"3","B":"5","C":"9","D":"25/3"}, "correct": "B", "verify": "auto" }
 ```
@@ -50,6 +53,9 @@ Reading & Writing items include a `**Passage:**` line (an original passage) and 
 **D.** decorative
 **Correct:** A
 **Explanation:** The cataloguing-before-deciding behavior signals careful order, so "methodical" fits.
+**Why not B:** "Hasty" is the opposite of the careful, cataloguing-before-deciding behavior the text describes.
+**Why not C:** "Indifferent" contradicts the archivist's deliberate effort to catalogue each ledger before acting.
+**Why not D:** "Decorative" is unrelated to the process described; nothing in the text concerns ornamentation.
 ````
 
 Rules:
@@ -57,10 +63,14 @@ Rules:
 - Exact bolded labels: `**Passage:**` (R&W only), `**Stem:**`, `**A.**`–`**D.**`,
   `**Correct:**` (a single letter A–D), `**Explanation:**` (explains why the correct
   answer is correct).
+- After `**Explanation:**`, exactly three `**Why not X:**` lines — one for each option
+  letter that is *not* the `**Correct:**` letter (so if `**Correct:**` is B, the lines are
+  `**Why not A:**`, `**Why not C:**`, `**Why not D:**`). Each states, accurately and
+  precisely, why that choice is wrong. The `**Explanation:**` line itself is unchanged.
 - Items are separated by a lone `---`.
-- Math items end with a ` ```spec ` block and have no `**Passage:**`. R&W items have a
-  `**Passage:**` and no `spec` block.
-- `set-meta` slugs (`section`, `skill`, `subskill`) match `taxonomy.json`; `difficulty` is
+- Math items end with a ` ```spec ` block (after the `Why not` lines) and have no
+  `**Passage:**`. R&W items have a `**Passage:**` and no `spec` block.
+- `set-meta` slugs (`subject`, `topic`, `skill`) match `taxonomy.json`; `difficulty` is
   `easy` | `medium` | `hard`.
 
 ## 2. Math solution spec (JSON — Math items only)
@@ -92,8 +102,8 @@ One report per set. Per item: a verdict line, one row per rule, and a `**Failed 
 line that the refine stage reads.
 
 ````markdown
-# Verification — <Section> · <Subskill> — <Difficulty>
-<!-- verify-meta: section=math; skill=algebra; subskill=linear-equations-in-one-variable; difficulty=easy; cycle=1 -->
+# Verification — <Subject> · <Skill> — <Difficulty>
+<!-- verify-meta: subject=math; topic=algebra; skill=linear-equations-in-one-variable; difficulty=easy; cycle=1 -->
 
 ## Item 1 — VERDICT: PASS
 | Rule | Result | Reason |
@@ -115,23 +125,26 @@ line that the refine stage reads.
 - One table row per rule ID; `Result` is `PASS` or `FAIL`; `Reason` is one specific line.
 - `**Failed rules:**` lists the failed IDs, comma-separated (empty when the item passes
   everything).
-- Rule IDs come from the subskill's verification-rules section.
+- Rule IDs come from the skill's verification-rules section.
 
 ## 4. Final Word layout (.docx)
 
-`build_docx.py` strips the `spec` blocks and lays the questions out in fixed order — for
-each subskill, three sets of 10 full questions, one after another:
+The pipeline builds **one .docx per difficulty** — three docs per run (easy / medium /
+hard) — by running `build_docx.py` once over each difficulty's final file. Each doc holds
+that one difficulty's 10 questions; the script strips the `spec` blocks and lays them out
+in a fixed shape:
 
-- **Title** — the run name.
-- If a run covers more than one subskill, a heading per subskill.
-- For each difficulty present, in order easy → medium → hard: a difficulty label, then its
-  10 questions one after another, each an identical block:
+- **Title** — the run name, naming the skill and difficulty (e.g. "Linear equations in one
+  variable — Easy").
+- A heading for the skill, then the difficulty label.
+- The 10 questions one after another, each an identical block:
   - `Question <n>` (bold)
   - the passage (Reading & Writing only)
   - the stem
   - options `A.`–`D.`, one per line
   - `Answer: <letter>`
   - `Explanation: <text>`
+  - `Why not <letter>: <text>` for each of the three non-correct options, in A→D order
 
-Every item uses the same block shape and the same `Answer:` / `Explanation:` labels, so
-Study Spaces can extract mechanically.
+Every item uses the same block shape and the same `Answer:` / `Explanation:` / `Why not X:`
+labels, so Study Spaces can extract mechanically.

@@ -1,18 +1,18 @@
 <!--
-Reusable prompt skeleton for ONE generation subagent (one subskill × one difficulty).
+Reusable prompt skeleton for ONE generation subagent (one skill × one difficulty).
 Generic — no SAT content lives here. The orchestrator fills the {INJECT:...} slots at
-runtime (see references/workflow.md → "Generate"). Written once; never copied per subskill.
+runtime (see references/workflow.md → "Generate"). Written once; never copied per skill.
 -->
 # Prompt: generate questions
 
 You are an expert SAT item writer. Produce **{INJECT:COUNT}** original SAT questions for a
-single subskill at a single difficulty. They must be **functionally equivalent** to
+single skill at a single difficulty. They must be **functionally equivalent** to
 official College Board items — testing the same skill, in the same structure, at the same
 difficulty — while being **entirely original** in content.
 
 ## Guidelines (your source of truth)
 
-{INJECT:SUBSKILL_CORE}
+{INJECT:SKILL_CORE}
 
 Write every item to the invariant above — test that skill and nothing else — drawing on
 the question variables for variety and the distractor-design rules so each wrong option
@@ -47,15 +47,22 @@ original passages for Reading & Writing. Full policy: `references/distinctness.m
 Write exactly **{INJECT:COUNT}** items in the standard question-set markdown defined in
 `references/output-format.md`:
 
-- Begin with the header line and the `set-meta` comment — `section`, `skill`, and
-  `subskill` taken from the guideline's identity header, `difficulty` from your difficulty
+- Begin with the header line and the `set-meta` comment — `subject`, `topic`, and
+  `skill` taken from the guideline's identity header, `difficulty` from your difficulty
   block, and `count`.
 - Separate items with a line containing only `---`.
 - Each item uses the exact bolded labels: `**Stem:**`, `**A.**`–`**D.**`, `**Correct:**`
   (a single letter A–D), and `**Explanation:**` (explains why the correct answer is
   correct).
+- Immediately after `**Explanation:**`, add exactly three `**Why not X:**` lines — one for
+  each option letter that is *not* the correct one — each stating, accurately and precisely,
+  why that choice is wrong. Tie each to the named error its distractor embodies: a short,
+  concrete reason (e.g. Math "divides by the constant instead of the coefficient, giving 3";
+  Reading & Writing "uses a passage word in the wrong sense" or "true of the text but not
+  what the question asks"). Do not change the `**Explanation:**` line itself.
 - Reading & Writing items also include `**Passage:**` with an original passage. Math items
-  omit the passage and end with a ` ```spec ` block (per `output-format.md`) whose keyed
-  option is the unique correct value, so `check_math.py` can confirm it.
+  omit the passage and end with a ` ```spec ` block (after the `**Why not X:**` lines, per
+  `output-format.md`) whose keyed option is the unique correct value, so `check_math.py` can
+  confirm it.
 
 Output only the question set — no commentary before or after the items.

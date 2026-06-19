@@ -1,8 +1,8 @@
 <!--
-GUIDELINE TEMPLATE — Math subskill. One file per subskill is the single source of truth for
+GUIDELINE TEMPLATE — Math skill. One file per skill is the single source of truth for
 BOTH generation and verification (see references/workflow.md). The orchestrator slices this
 file into three pieces, so KEEP these headings exactly:
-  - SUBSKILL_CORE      = the `## Core` section (identity + design)
+  - SKILL_CORE      = the `## Core` section (identity + design)
   - DIFFICULTY         = one `### <level>` block under `## Difficulty`
   - VERIFICATION_RULES = the `## Verification rules` section
 Fill in every TODO below.
@@ -13,12 +13,12 @@ When the file is complete, change `status` from PLACEHOLDER to `ready`.
 
 ## Core
 
-- **section:** math
-- **skill:** algebra
-- **subskill:** systems-of-two-linear-equations-in-two-variables
+- **subject:** math
+- **topic:** algebra
+- **skill:** systems-of-two-linear-equations-in-two-variables
 - **status:** PLACEHOLDER — rules not yet written
 
-### Invariant — what this subskill tests
+### Invariant — what this skill tests
 
 The constant across every item: the exact skill and cognitive task, regardless of the
 surface story or numbers. This is what "functionally equivalent to a College Board item"
@@ -59,11 +59,11 @@ the key. The JSON shape is fixed in `references/output-format.md` (`given`, `ask
 
 ## Difficulty
 
-What moves an item between levels *for this subskill*. Same skill at every level — only the
+What moves an item between levels *for this skill*. Same skill at every level — only the
 load changes. Each block is injected on its own, so write each to stand alone.
 
 ### Easy
-> TODO — what makes this subskill easy (e.g. one operation, integer answer, abstract framing).
+> TODO — what makes this skill easy (e.g. one operation, integer answer, abstract framing).
 
 ### Medium
 > TODO — e.g. two or three steps, variables on both sides, light real-world translation.
@@ -75,7 +75,7 @@ load changes. Each block is injected on its own, so write each to stand alone.
 ## Verification rules
 
 Checked by the verifier; an item passes only if **all** pass. Each references the sections
-above, so they apply as soon as Core and Difficulty are filled in. Adjust per subskill only
+above, so they apply as soon as Core and Difficulty are filled in. Adjust per skill only
 if needed.
 
 | ID | Rule (passes when…) |
@@ -88,3 +88,4 @@ if needed.
 | M-6 | The explanation correctly derives the keyed answer. |
 | M-7 | Distinctness: not a paraphrase of any reference item (see `distinctness.md`). |
 | M-8 | The item is self-contained and unambiguous — exactly one defensible answer. |
+| M-9 | Each wrong-answer explanation accurately and precisely states why that option is incorrect, consistent with its distractor error pattern. |

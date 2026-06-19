@@ -1,8 +1,8 @@
 <!--
-GUIDELINE TEMPLATE — Reading & Writing subskill. One file per subskill is the single source
+GUIDELINE TEMPLATE — Reading & Writing skill. One file per skill is the single source
 of truth for BOTH generation and verification (see references/workflow.md). The orchestrator
 slices this file into three pieces, so KEEP these headings exactly:
-  - SUBSKILL_CORE      = the `## Core` section (identity + design, incl. the passage spec)
+  - SKILL_CORE      = the `## Core` section (identity + design, incl. the passage spec)
   - DIFFICULTY         = one `### <level>` block under `## Difficulty`
   - VERIFICATION_RULES = the `## Verification rules` section
 Fill in every TODO below.
@@ -13,12 +13,12 @@ When the file is complete, change `status` from PLACEHOLDER to `ready`.
 
 ## Core
 
-- **section:** reading-writing
-- **skill:** craft-and-structure
-- **subskill:** words-in-context
+- **subject:** reading-writing
+- **topic:** craft-and-structure
+- **skill:** words-in-context
 - **status:** PLACEHOLDER — rules not yet written
 
-### Invariant — what this subskill tests
+### Invariant — what this skill tests
 
 The constant across every item: the exact reading/writing demand, regardless of passage
 topic. This is what "functionally equivalent to a College Board item" means.
@@ -44,7 +44,7 @@ The passage is original content the generator writes. Hold it to SAT norms.
 | Variable | Allowed range / options | Notes |
 |---|---|---|
 | Passage topic | TODO | vary widely across a set |
-| Stem phrasing | TODO (canonical phrasings for this subskill) | |
+| Stem phrasing | TODO (canonical phrasings for this skill) | |
 | What is asked | TODO | |
 | Options | 4 single-select | |
 
@@ -59,7 +59,7 @@ The passage is original content the generator writes. Hold it to SAT norms.
 
 ## Difficulty
 
-What moves an item between levels *for this subskill*. Same skill at every level — only the
+What moves an item between levels *for this skill*. Same skill at every level — only the
 load changes. Each block is injected on its own, so write each to stand alone.
 
 ### Easy
@@ -75,7 +75,7 @@ load changes. Each block is injected on its own, so write each to stand alone.
 ## Verification rules
 
 Checked by the verifier; an item passes only if **all** pass. Each references the sections
-above, so they apply as soon as Core and Difficulty are filled in. Adjust per subskill only
+above, so they apply as soon as Core and Difficulty are filled in. Adjust per skill only
 if needed.
 
 | ID | Rule (passes when…) |
@@ -85,7 +85,8 @@ if needed.
 | R-3 | The item is calibrated to the requested difficulty (its `### <level>` block). |
 | R-4 | Exactly one option is defensible from the passage alone — no outside knowledge needed. |
 | R-5 | Every distractor maps to a named trap in the distractor design. |
-| R-6 | The stem uses a canonical phrasing for this subskill. |
+| R-6 | The stem uses a canonical phrasing for this skill. |
 | R-7 | The explanation cites the textual evidence for the keyed answer. |
 | R-8 | Distinctness: passage and question are original (see `distinctness.md`). |
 | R-9 | The item is self-contained and unambiguous — exactly one defensible answer. |
+| R-10 | Each wrong-answer explanation accurately and precisely states why that option is incorrect, consistent with its distractor trap. |

@@ -12,7 +12,7 @@ adapt them).
 
 - *Function* — the underlying skill, the cognitive demand, the question's structure, the
   kind of trap each distractor sets, and the difficulty. These should match the official
-  item; that match is what makes the practice valid. (They're defined per subskill in the
+  item; that match is what makes the practice valid. (They're defined per skill in the
   guideline file.)
 - *Content* — the specific passage, topic, scenario, names, numbers, phrasings, and answer
   values. These are freshly invented for every item.
@@ -27,7 +27,7 @@ beyond what the skill inherently requires.
 The generator reads the uploaded official items (its reference PDF) as **structural
 anchors only**. From them, take:
 
-- the question's shape and the stem's typical phrasing for this subskill;
+- the question's shape and the stem's typical phrasing for this skill;
 - the *category* of each distractor's trap (e.g. "sign error", "true but not the main
   idea").
 
@@ -49,7 +49,7 @@ are precisely what each new item must be visibly *different from*.
 
 ## What the distinctness check fails
 
-The distinctness rule in a subskill's verification section fails an item if:
+The distinctness rule in a skill's verification section fails an item if:
 
 - its passage or scenario is a recognizable paraphrase of a reference item;
 - it shares distinctive wording, structure-plus-content, or answer values with one;

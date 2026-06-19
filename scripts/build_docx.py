@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """
-Build the final .docx from one or more verified question-set markdown files, in the fixed
-layout from references/output-format.md: grouped by subskill, then difficulty
-(easy -> medium -> hard), each item an identical block, with the Math `spec` blocks
-stripped.
+Build a .docx for ONE verified question-set markdown file — the 10 questions for a single
+(skill x difficulty) — in the fixed layout from references/output-format.md: each item an
+identical block, with the Math `spec` blocks stripped. The pipeline runs this once per
+difficulty, producing three separate docs (easy / medium / hard) for a run.
 
-Usage:
-    python scripts/build_docx.py --out final.docx --title "Linear equations in one variable" final/*.md
-    python scripts/build_docx.py --out final.docx --answer-key-section final/*.md
+(More than one file may be passed; they are grouped by skill, then difficulty, into one
+doc. The pipeline does not do this — it builds one difficulty per doc.)
+
+Usage (one doc per difficulty):
+    python scripts/build_docx.py --out final/linear-equations-in-one-variable-easy.docx \
+        --title "Linear equations in one variable - Easy"   final/linear-equations-in-one-variable__easy.md
+    python scripts/build_docx.py --out final/linear-equations-in-one-variable-medium.docx \
+        --title "Linear equations in one variable - Medium" final/linear-equations-in-one-variable__medium.md
+    python scripts/build_docx.py --out final/linear-equations-in-one-variable-hard.docx \
+        --title "Linear equations in one variable - Hard"   final/linear-equations-in-one-variable__hard.md
 
 Requires python-docx:  pip install python-docx --break-system-packages
 """
@@ -27,6 +34,11 @@ TAX = json.loads((ROOT / "references" / "taxonomy.json").read_text())
 
 META_RE = re.compile(r"set-meta:\s*(.*)")
 ITEM_RE = re.compile(r"^##\s+Item\s+\d+\b", re.MULTILINE)
+# Multi-line fields capture up to the next bold label, the `---` separator, or end of
+# block — so the correct-answer explanation no longer swallows the `Why not X:` lines.
+def _tail(label):
+    return re.compile(rf"^\*\*{label}:\*\*\s*(.*?)(?=\n\*\*|\n---|\Z)", re.MULTILINE | re.DOTALL)
+
 FIELD_RE = {
     "passage":     re.compile(r"^\*\*Passage:\*\*\s*(.*)", re.MULTILINE),
     "stem":        re.compile(r"^\*\*Stem:\*\*\s*(.*)", re.MULTILINE),
@@ -35,16 +47,23 @@ FIELD_RE = {
     "C":           re.compile(r"^\*\*C\.\*\*\s*(.*)", re.MULTILINE),
     "D":           re.compile(r"^\*\*D\.\*\*\s*(.*)", re.MULTILINE),
     "correct":     re.compile(r"^\*\*Correct:\*\*\s*([A-D])", re.MULTILINE),
-    "explanation": re.compile(r"^\*\*Explanation:\*\*\s*(.*)", re.MULTILINE | re.DOTALL),
+    "explanation": _tail("Explanation"),
+    "why_not_A":   _tail("Why not A"),
+    "why_not_B":   _tail("Why not B"),
+    "why_not_C":   _tail("Why not C"),
+    "why_not_D":   _tail("Why not D"),
 }
+# Fields that live in the tail of an item (after the options) and must be read from the
+# spec-stripped text so a Math item's trailing `spec` JSON never bleeds into them.
+TAIL_KEYS = {"explanation", "why_not_A", "why_not_B", "why_not_C", "why_not_D"}
 DIFF_ORDER = {"easy": 0, "medium": 1, "hard": 2}
 
 
-def label_for(section, skill, subskill):
+def label_for(subject, topic, skill):
     try:
-        return TAX[section]["skills"][skill]["subskills"][subskill]
+        return TAX[subject]["topics"][topic]["skills"][skill]
     except KeyError:
-        return subskill.replace("-", " ").capitalize()
+        return skill.replace("-", " ").capitalize()
 
 
 def parse_meta(md):
@@ -64,10 +83,10 @@ def parse_items(md):
     for i, start in enumerate(starts):
         end = starts[i + 1] if i + 1 < len(starts) else len(md)
         block = md[start:end]
-        before_spec = re.split(r"```spec", block)[0]   # keep the spec JSON out of the explanation
+        before_spec = re.split(r"```spec", block)[0]   # keep the spec JSON out of the tail fields
         item = {}
         for key, rx in FIELD_RE.items():
-            src = before_spec if key == "explanation" else block
+            src = before_spec if key in TAIL_KEYS else block
             mm = rx.search(src)
             if mm:
                 item[key] = mm.group(1).strip()
@@ -89,12 +108,12 @@ def main():
     for path in args.inputs:
         md = Path(path).read_text()
         meta = parse_meta(md)
-        section = meta.get("section", "")
-        skill = meta.get("skill", "")
-        subskill = meta.get("subskill", Path(path).stem)
+        subject = meta.get("subject", "")
+        topic = meta.get("topic", "")
+        skill = meta.get("skill", Path(path).stem)
         diff = meta.get("difficulty", "unspecified")
-        key = (section, skill, subskill)
-        labels[key] = label_for(section, skill, subskill)
+        key = (subject, topic, skill)
+        labels[key] = label_for(subject, topic, skill)
         grouped.setdefault(key, {})[diff] = parse_items(md)
 
     doc = Document()
@@ -129,6 +148,12 @@ def main():
                 exp = doc.add_paragraph()
                 exp.add_run("Explanation: ").bold = True
                 exp.add_run(item.get("explanation", ""))
+                for letter in ("A", "B", "C", "D"):
+                    why = item.get(f"why_not_{letter}")
+                    if why:
+                        wp = doc.add_paragraph()
+                        wp.add_run(f"Why not {letter}: ").bold = True
+                        wp.add_run(why)
                 doc.add_paragraph("")  # spacer between questions
                 answer_key.append((labels[key], diff, n, item.get("correct", "")))
 
@@ -145,7 +170,7 @@ def main():
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     doc.save(args.out)
-    print(f"Wrote {args.out}: {len(grouped)} subskill(s), {len(answer_key)} item(s).")
+    print(f"Wrote {args.out}: {len(grouped)} skill(s), {len(answer_key)} item(s).")
 
 
 if __name__ == "__main__":

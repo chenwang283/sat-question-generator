@@ -1,6 +1,6 @@
 {
-  "_note": "Canonical digital SAT content taxonomy. Drives the subskill-rules folder tree and name validation. Slugs are folder/file names; 'label' is the human-facing name. If College Board revises the framework, update here and update the subskill-rules tree to match.",
-  "_terminology": "Hierarchy is section -> skill -> subskill. 'skill' = e.g. Algebra (College Board's own term for this level is 'domain'); 'subskill' = e.g. Linear equations in one variable (College Board calls this level a 'skill'). This tool uses skill/subskill throughout.",
+  "_note": "Canonical digital SAT content taxonomy. Drives the skill-rules folder tree and name validation. Slugs are folder/file names; 'label' is the human-facing name. If College Board revises the framework, update here and update the skill-rules tree to match.",
+  "_terminology": "Hierarchy is subject -> topic -> skill. 'topic' = e.g. Algebra (College Board's own term for this level is 'domain'); 'skill' = e.g. Linear equations in one variable (College Board also calls this level a 'skill'). This tool uses subject/topic/skill throughout.",
   "difficulties": [
     "easy",
     "medium",
@@ -8,10 +8,10 @@
   ],
   "math": {
     "label": "Math",
-    "skills": {
+    "topics": {
       "algebra": {
         "label": "Algebra",
-        "subskills": {
+        "skills": {
           "linear-equations-in-one-variable": "Linear equations in one variable",
           "linear-equations-in-two-variables": "Linear equations in two variables",
           "linear-functions": "Linear functions",
@@ -21,7 +21,7 @@
       },
       "advanced-math": {
         "label": "Advanced Math",
-        "subskills": {
+        "skills": {
           "equivalent-expressions": "Equivalent expressions",
           "nonlinear-equations-in-one-variable-and-systems-of-equations-in-two-variables": "Nonlinear equations in one variable and systems of equations in two variables",
           "nonlinear-functions": "Nonlinear functions"
@@ -29,7 +29,7 @@
       },
       "problem-solving-and-data-analysis": {
         "label": "Problem-Solving and Data Analysis",
-        "subskills": {
+        "skills": {
           "ratios-rates-proportional-relationships-and-units": "Ratios, rates, proportional relationships, and units",
           "percentages": "Percentages",
           "one-variable-data-distributions-and-measures-of-center-and-spread": "One-variable data: distributions and measures of center and spread",
@@ -41,7 +41,7 @@
       },
       "geometry-and-trigonometry": {
         "label": "Geometry and Trigonometry",
-        "subskills": {
+        "skills": {
           "area-and-volume": "Area and volume",
           "lines-angles-and-triangles": "Lines, angles, and triangles",
           "right-triangles-and-trigonometry": "Right triangles and trigonometry",
@@ -52,10 +52,10 @@
   },
   "reading-writing": {
     "label": "Reading and Writing",
-    "skills": {
+    "topics": {
       "information-and-ideas": {
         "label": "Information and Ideas",
-        "subskills": {
+        "skills": {
           "central-ideas-and-details": "Central Ideas and Details",
           "inferences": "Inferences",
           "command-of-evidence-textual": "Command of Evidence (Textual)",
@@ -64,7 +64,7 @@
       },
       "craft-and-structure": {
         "label": "Craft and Structure",
-        "subskills": {
+        "skills": {
           "words-in-context": "Words in Context",
           "text-structure-and-purpose": "Text Structure and Purpose",
           "cross-text-connections": "Cross-Text Connections"
@@ -72,14 +72,14 @@
       },
       "expression-of-ideas": {
         "label": "Expression of Ideas",
-        "subskills": {
+        "skills": {
           "rhetorical-synthesis": "Rhetorical Synthesis",
           "transitions": "Transitions"
         }
       },
       "standard-english-conventions": {
         "label": "Standard English Conventions",
-        "subskills": {
+        "skills": {
           "boundaries": "Boundaries",
           "form-structure-and-sense": "Form, Structure, and Sense"
         }
