@@ -11,6 +11,12 @@ mechanically:
 These shapes are fixed: the orchestrator routes by their headings and labels, the scripts
 parse them, and Study Spaces extracts the Word doc by structure. Don't vary them.
 
+On disk these correspond to the staged artifacts named in `workflow.md`: the **question set**
+is staged as `generated/<skill>__<difficulty>.md` (and, once it passes, copied verbatim to
+`final/<skill>__<difficulty>.md`), and the **verification report** as
+`verified/<skill>__<difficulty>.md`. This file defines the *shapes*; `workflow.md` defines
+*where they are staged* — the two are kept separate on purpose.
+
 ## 1. Question set (markdown)
 
 One file per `(skill × difficulty)`. A header line, a `set-meta` comment, then items
